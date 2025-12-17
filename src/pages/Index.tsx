@@ -7,7 +7,11 @@ import { NavigationGrid } from '@/components/exam/NavigationGrid';
 import { FinalReport } from '@/components/exam/FinalReport';
 import { ExamFooter } from '@/components/exam/ExamFooter';
 import { ExamSegments, PassageNumber, ViewType, QuestionState } from '@/types/exam';
-import { BookOpen, FileQuestion } from 'lucide-react';
+import { BookOpen, FileQuestion, LogOut } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import { Button } from '@/components/ui/button';
 
 const INITIAL_TIME = 3600; // 60 minutes
 
@@ -15,6 +19,9 @@ const createInitialQuestions = (): QuestionState[] =>
   Array(41).fill(null).map(() => ({ answered: false, marked: false, value: '' }));
 
 export default function Index() {
+  const { user, signOut } = useAuth();
+  const { toast } = useToast();
+  
   // Exam state
   const [examStarted, setExamStarted] = useState(false);
   const [examSubmitted, setExamSubmitted] = useState(false);
@@ -100,14 +107,44 @@ export default function Index() {
   }, []);
 
   // Submit exam
-  const handleSubmit = useCallback(() => {
+  const handleSubmit = useCallback(async () => {
     if (!confirm('Are you sure you want to finish the test? You cannot make changes after submission.')) {
       return;
     }
     if (timerRef.current) clearInterval(timerRef.current);
     setIsTimerRunning(false);
+    
+    // Save results to database
+    if (user) {
+      const timeTaken = INITIAL_TIME - timeLeft;
+      const answers = questions.slice(1).map((q, i) => ({
+        question: i + 1,
+        answer: q.value,
+        marked: q.marked
+      }));
+      
+      const { error } = await supabase.from('exam_results').insert({
+        user_id: user.id,
+        time_taken_seconds: timeTaken,
+        answers: answers
+      });
+      
+      if (error) {
+        toast({
+          title: 'Error saving results',
+          description: 'Your results could not be saved, but you can still view them.',
+          variant: 'destructive'
+        });
+      } else {
+        toast({
+          title: 'Results saved',
+          description: 'Your exam results have been saved to your account.'
+        });
+      }
+    }
+    
     setExamSubmitted(true);
-  }, []);
+  }, [user, questions, timeLeft, toast]);
 
   // Restart
   const handleRestart = useCallback(() => {
