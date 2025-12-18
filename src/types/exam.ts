@@ -25,4 +25,5 @@ export interface ListeningSection {
   startTime: number; // in seconds
   endTime: number; // in seconds
   questionRange: [number, number];
+  questionPages: [number, number]; // PDF page range for questions
 }
