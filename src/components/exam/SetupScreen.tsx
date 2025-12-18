@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { ExamSegments } from '@/types/exam';
-import { Upload, FileText, Settings, Play, LogOut } from 'lucide-react';
+import { Upload, FileText, Settings, Play, LogOut, ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
 
 interface SetupScreenProps {
   onLaunch: (pdfFile: File, segments: ExamSegments) => void;
@@ -55,6 +56,9 @@ export function SetupScreen({ onLaunch }: SetupScreenProps) {
         {/* Header */}
         <div className="flex items-center justify-between mb-8 pb-6 border-b-4 border-accent">
           <div className="flex items-center gap-3">
+            <Link to="/" className="p-2 hover:bg-muted rounded transition-colors">
+              <ArrowLeft className="w-5 h-5 text-muted-foreground" />
+            </Link>
             <div className="w-12 h-12 bg-primary rounded flex items-center justify-center">
               <FileText className="w-6 h-6 text-primary-foreground" />
             </div>

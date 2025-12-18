@@ -1,14 +1,14 @@
 import { QuestionState } from '@/types/exam';
-import { FileText, RotateCcw, CheckCircle, AlertCircle, Home } from 'lucide-react';
+import { Headphones, RotateCcw, CheckCircle, AlertCircle, Home } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-interface FinalReportProps {
+interface ListeningFinalReportProps {
   questions: QuestionState[];
   timeSpent: number;
   onRestart: () => void;
 }
 
-export function FinalReport({ questions, timeSpent, onRestart }: FinalReportProps) {
+export function ListeningFinalReport({ questions, timeSpent, onRestart }: ListeningFinalReportProps) {
   const answeredCount = questions.slice(1).filter(q => q.answered).length;
   const unansweredCount = 40 - answeredCount;
   
@@ -25,11 +25,11 @@ export function FinalReport({ questions, timeSpent, onRestart }: FinalReportProp
         <div className="border-b-4 border-accent pb-6 mb-8">
           <div className="flex items-center gap-4 mb-4">
             <div className="w-14 h-14 bg-primary rounded flex items-center justify-center">
-              <FileText className="w-7 h-7 text-primary-foreground" />
+              <Headphones className="w-7 h-7 text-primary-foreground" />
             </div>
             <div>
               <h1 className="text-2xl font-bold text-foreground">Official Answer Sheet</h1>
-              <p className="text-muted-foreground">IELTS Reading Test Simulation</p>
+              <p className="text-muted-foreground">IELTS Listening Test Simulation</p>
             </div>
           </div>
           

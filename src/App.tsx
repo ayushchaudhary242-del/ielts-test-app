@@ -4,7 +4,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
+import Home from "./pages/Home";
 import Index from "./pages/Index";
+import Listening from "./pages/Listening";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
@@ -15,10 +17,10 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   
   if (loading) {
     return (
-      <div className="min-h-screen bg-ielts-grey flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-ielts-yellow border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-ielts-header">Loading...</p>
+          <div className="w-12 h-12 border-4 border-accent border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-foreground">Loading...</p>
         </div>
       </div>
     );
@@ -36,10 +38,10 @@ function AuthRoute({ children }: { children: React.ReactNode }) {
   
   if (loading) {
     return (
-      <div className="min-h-screen bg-ielts-grey flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-ielts-yellow border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-ielts-header">Loading...</p>
+          <div className="w-12 h-12 border-4 border-accent border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-foreground">Loading...</p>
         </div>
       </div>
     );
@@ -61,8 +63,9 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/auth" element={<AuthRoute><Auth /></AuthRoute>} />
-            <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+            <Route path="/reading" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+            <Route path="/listening" element={<ProtectedRoute><Listening /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
