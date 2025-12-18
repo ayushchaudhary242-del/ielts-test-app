@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { ListeningSetupScreen } from '@/components/exam/ListeningSetupScreen';
 import { ListeningExamHeader } from '@/components/exam/ListeningExamHeader';
 import { AudioPlayer } from '@/components/exam/AudioPlayer';
+import { PDFViewer } from '@/components/exam/PDFViewer';
 import { QuestionsPanel } from '@/components/exam/QuestionsPanel';
 import { NavigationGrid } from '@/components/exam/NavigationGrid';
 import { ListeningFinalReport } from '@/components/exam/ListeningFinalReport';
@@ -24,11 +25,13 @@ export default function Listening() {
   const [examStarted, setExamStarted] = useState(false);
   const [examSubmitted, setExamSubmitted] = useState(false);
   const [audioFile, setAudioFile] = useState<File | null>(null);
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [sections, setSections] = useState<ListeningSection[]>([]);
   
   // UI state
   const [currentSection, setCurrentSection] = useState(1);
   const [showNav, setShowNav] = useState(false);
+  const [viewType, setViewType] = useState<'audio' | 'pdf'>('audio');
   
   // Questions state
   const [questions, setQuestions] = useState<QuestionState[]>(createInitialQuestions);
@@ -42,9 +45,14 @@ export default function Listening() {
   const [leftPanelWidth, setLeftPanelWidth] = useState(50);
   const isDragging = useRef(false);
 
+  // Get current section's page range
+  const currentSectionData = sections[currentSection - 1];
+  const currentPageRange = currentSectionData?.questionPages || [1, 1];
+
   // Launch exam
-  const handleLaunch = (file: File, sectionConfig: ListeningSection[]) => {
-    setAudioFile(file);
+  const handleLaunch = (audio: File, pdf: File, sectionConfig: ListeningSection[]) => {
+    setAudioFile(audio);
+    setPdfFile(pdf);
     setSections(sectionConfig);
     setExamStarted(true);
   };
@@ -148,11 +156,13 @@ export default function Listening() {
     setExamStarted(false);
     setExamSubmitted(false);
     setAudioFile(null);
+    setPdfFile(null);
     setSections([]);
     setQuestions(createInitialQuestions());
     setTimeLeft(INITIAL_TIME);
     setIsTimerRunning(false);
     setCurrentSection(1);
+    setViewType('audio');
   }, []);
 
   // Divider drag
@@ -213,7 +223,7 @@ export default function Listening() {
 
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Left Panel - Audio Player */}
+        {/* Left Panel - Audio/PDF */}
         <div 
           className="flex flex-col overflow-hidden bg-panel-left"
           style={{ width: `${leftPanelWidth}%` }}
@@ -231,13 +241,44 @@ export default function Listening() {
             ))}
           </div>
 
-          {/* Audio Player */}
-          {audioFile && (
+          {/* View Type Toggle */}
+          <div className="flex bg-secondary border-b border-border">
+            <button
+              onClick={() => setViewType('audio')}
+              className={`flex-1 py-2 px-4 text-sm font-medium transition-colors ${
+                viewType === 'audio' 
+                  ? 'bg-primary text-primary-foreground' 
+                  : 'text-muted-foreground hover:bg-muted'
+              }`}
+            >
+              Audio Player
+            </button>
+            <button
+              onClick={() => setViewType('pdf')}
+              className={`flex-1 py-2 px-4 text-sm font-medium transition-colors ${
+                viewType === 'pdf' 
+                  ? 'bg-primary text-primary-foreground' 
+                  : 'text-muted-foreground hover:bg-muted'
+              }`}
+            >
+              Questions PDF
+            </button>
+          </div>
+
+          {/* Content */}
+          {viewType === 'audio' && audioFile && (
             <AudioPlayer
               file={audioFile}
               currentSection={currentSection}
               sections={sections}
               onTimerStart={() => setIsTimerRunning(true)}
+            />
+          )}
+          {viewType === 'pdf' && pdfFile && (
+            <PDFViewer
+              file={pdfFile}
+              startPage={currentPageRange[0]}
+              endPage={currentPageRange[1]}
             />
           )}
         </div>
