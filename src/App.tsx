@@ -8,6 +8,7 @@ import Home from "./pages/Home";
 import Index from "./pages/Index";
 import Listening from "./pages/Listening";
 import Writing from "./pages/Writing";
+import History from "./pages/History";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
@@ -68,6 +69,7 @@ const App = () => (
             <Route path="/reading" element={<ProtectedRoute><Index /></ProtectedRoute>} />
             <Route path="/listening" element={<ProtectedRoute><Listening /></ProtectedRoute>} />
             <Route path="/writing" element={<ProtectedRoute><Writing /></ProtectedRoute>} />
+            <Route path="/history" element={<ProtectedRoute><History /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

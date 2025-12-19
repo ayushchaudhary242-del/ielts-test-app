@@ -1,12 +1,11 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { ListeningSetupScreen } from '@/components/exam/ListeningSetupScreen';
-import { ListeningExamHeader } from '@/components/exam/ListeningExamHeader';
 import { AudioPlayer } from '@/components/exam/AudioPlayer';
 import { PDFViewer } from '@/components/exam/PDFViewer';
 import { QuestionsPanel } from '@/components/exam/QuestionsPanel';
 import { NavigationGrid } from '@/components/exam/NavigationGrid';
 import { ListeningFinalReport } from '@/components/exam/ListeningFinalReport';
-import { ExamFooter } from '@/components/exam/ExamFooter';
+import { CompactExamControls } from '@/components/exam/CompactExamControls';
 import { QuestionState, ListeningSection } from '@/types/exam';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -77,6 +76,12 @@ export default function Listening() {
 
   const toggleTimer = useCallback(() => {
     setIsTimerRunning(prev => !prev);
+  }, []);
+
+  const resetTimer = useCallback(() => {
+    setTimeLeft(INITIAL_TIME);
+    setIsTimerRunning(false);
+    if (timerRef.current) clearInterval(timerRef.current);
   }, []);
 
   // Answer updates
@@ -213,14 +218,6 @@ export default function Listening() {
 
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-muted">
-      {/* Header */}
-      <ListeningExamHeader
-        currentSection={currentSection}
-        timeLeft={timeLeft}
-        isTimerRunning={isTimerRunning}
-        onToggleTimer={toggleTimer}
-      />
-
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden">
         {/* Left Panel - Audio/PDF */}
@@ -236,7 +233,7 @@ export default function Listening() {
                 onClick={() => setCurrentSection(num)}
                 className={`passage-btn ${currentSection === num ? 'active' : ''}`}
               >
-                SECTION {num}
+                Section {num}
               </button>
             ))}
           </div>
@@ -286,9 +283,9 @@ export default function Listening() {
         {/* Divider */}
         <div
           onMouseDown={handleDividerMouseDown}
-          className="w-2.5 bg-divider cursor-col-resize flex items-center justify-center text-white/50 hover:bg-primary transition-colors select-none"
+          className="w-1.5 bg-border cursor-col-resize flex items-center justify-center text-muted-foreground hover:bg-primary transition-colors select-none"
         >
-          ⋮⋮
+          ⋮
         </div>
 
         {/* Right Panel */}
@@ -296,19 +293,22 @@ export default function Listening() {
           className="flex flex-col overflow-hidden"
           style={{ width: `${100 - leftPanelWidth}%` }}
         >
+          <CompactExamControls
+            timeLeft={timeLeft}
+            isTimerRunning={isTimerRunning}
+            onToggleTimer={toggleTimer}
+            onResetTimer={resetTimer}
+            label={`Listening Test - Section ${currentSection}`}
+          />
           <QuestionsPanel
             questions={questions}
             onUpdateAnswer={updateAnswer}
             onToggleMark={toggleMark}
+            onOpenNav={() => setShowNav(true)}
+            onSubmit={handleSubmit}
           />
         </div>
       </div>
-
-      {/* Footer */}
-      <ExamFooter
-        onOpenNav={() => setShowNav(true)}
-        onSubmit={handleSubmit}
-      />
 
       {/* Navigation Grid Modal */}
       {showNav && (
