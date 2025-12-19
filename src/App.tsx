@@ -7,6 +7,7 @@ import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import Home from "./pages/Home";
 import Index from "./pages/Index";
 import Listening from "./pages/Listening";
+import Writing from "./pages/Writing";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
@@ -66,6 +67,7 @@ const App = () => (
             <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
             <Route path="/reading" element={<ProtectedRoute><Index /></ProtectedRoute>} />
             <Route path="/listening" element={<ProtectedRoute><Listening /></ProtectedRoute>} />
+            <Route path="/writing" element={<ProtectedRoute><Writing /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
