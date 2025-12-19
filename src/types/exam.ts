@@ -27,3 +27,14 @@ export interface ListeningSection {
   questionRange: [number, number];
   questionPages: [number, number]; // PDF page range for questions
 }
+
+// Writing Test Types
+export interface WritingTask {
+  id: 1 | 2;
+  pages: [number, number]; // PDF page range for task
+}
+
+export interface WritingAnswers {
+  task1: string;
+  task2: string;
+}

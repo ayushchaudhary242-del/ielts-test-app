@@ -1,6 +1,6 @@
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
-import { BookOpen, Headphones, LogOut, History } from 'lucide-react';
+import { BookOpen, Headphones, PenTool, LogOut, History } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export default function Home() {
@@ -46,7 +46,7 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-8">
+          <div className="grid md:grid-cols-3 gap-8">
             {/* Reading Test Card */}
             <Link 
               to="/reading"
@@ -85,7 +85,7 @@ export default function Home() {
                 Listening Test
               </h2>
               <p className="text-muted-foreground mb-4">
-                Listen to audio recordings and answer 40 questions in approximately 30 minutes.
+                Listen to audio recordings and answer 40 questions in ~30 minutes.
               </p>
               <div className="flex items-center gap-4 text-sm text-muted-foreground">
                 <span className="flex items-center gap-1">
@@ -95,6 +95,32 @@ export default function Home() {
                 <span className="flex items-center gap-1">
                   <span className="w-2 h-2 bg-accent rounded-full"></span>
                   40 questions
+                </span>
+              </div>
+            </Link>
+
+            {/* Writing Test Card */}
+            <Link 
+              to="/writing"
+              className="group bg-card p-8 rounded-xl border-2 border-border hover:border-primary transition-all duration-300 hover:shadow-xl"
+            >
+              <div className="w-16 h-16 bg-primary/10 rounded-xl flex items-center justify-center mb-6 group-hover:bg-primary/20 transition-colors">
+                <PenTool className="w-8 h-8 text-primary" />
+              </div>
+              <h2 className="text-2xl font-bold text-foreground mb-3">
+                Writing Test
+              </h2>
+              <p className="text-muted-foreground mb-4">
+                Complete 2 writing tasks in 60 minutes with word count tracking.
+              </p>
+              <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                <span className="flex items-center gap-1">
+                  <span className="w-2 h-2 bg-accent rounded-full"></span>
+                  60 minutes
+                </span>
+                <span className="flex items-center gap-1">
+                  <span className="w-2 h-2 bg-accent rounded-full"></span>
+                  2 tasks
                 </span>
               </div>
             </Link>
