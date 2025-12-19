@@ -1,14 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import { WritingTask, WritingAnswers } from '@/types/exam';
 import { WritingSetupScreen } from '@/components/exam/WritingSetupScreen';
-import { WritingExamHeader } from '@/components/exam/WritingExamHeader';
 import { WritingAnswerPanel } from '@/components/exam/WritingAnswerPanel';
 import { WritingFinalReport } from '@/components/exam/WritingFinalReport';
 import { PDFViewer } from '@/components/exam/PDFViewer';
+import { CompactExamControls } from '@/components/exam/CompactExamControls';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
-import { Send } from 'lucide-react';
 
 const WRITING_TIME = 60 * 60; // 60 minutes
 
@@ -52,6 +51,12 @@ export default function Writing() {
     setIsTimerRunning(prev => !prev);
   }, []);
 
+  // Reset timer
+  const resetTimer = useCallback(() => {
+    setTimeLeft(WRITING_TIME);
+    setIsTimerRunning(false);
+  }, []);
+
   // Update answer
   const updateAnswer = useCallback((task: 1 | 2, value: string) => {
     setAnswers(prev => ({
@@ -62,6 +67,9 @@ export default function Writing() {
 
   // Submit exam
   const handleSubmit = useCallback(async () => {
+    if (!confirm('Are you sure you want to submit? You cannot make changes after submission.')) {
+      return;
+    }
     setIsTimerRunning(false);
     const taken = WRITING_TIME - timeLeft;
     setTimeTaken(taken);
@@ -156,14 +164,6 @@ export default function Writing() {
 
   return (
     <div className="h-screen flex flex-col bg-background overflow-hidden">
-      {/* Header */}
-      <WritingExamHeader
-        currentTask={currentTask}
-        timeLeft={timeLeft}
-        isTimerRunning={isTimerRunning}
-        onToggleTimer={toggleTimer}
-      />
-
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden">
         {/* Left Panel - PDF with Task Tabs */}
@@ -175,7 +175,7 @@ export default function Writing() {
           <div className="flex border-b border-border bg-secondary">
             <button
               onClick={() => setCurrentTask(1)}
-              className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
+              className={`flex-1 px-4 py-2 text-sm font-medium transition-colors ${
                 currentTask === 1
                   ? 'bg-primary text-primary-foreground'
                   : 'text-muted-foreground hover:bg-muted'
@@ -185,7 +185,7 @@ export default function Writing() {
             </button>
             <button
               onClick={() => setCurrentTask(2)}
-              className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
+              className={`flex-1 px-4 py-2 text-sm font-medium transition-colors ${
                 currentTask === 2
                   ? 'bg-primary text-primary-foreground'
                   : 'text-muted-foreground hover:bg-muted'
@@ -207,7 +207,7 @@ export default function Writing() {
 
         {/* Resizer */}
         <div
-          className="w-1 bg-border hover:bg-primary cursor-col-resize transition-colors"
+          className="w-1.5 bg-border hover:bg-primary cursor-col-resize transition-colors"
           onMouseDown={() => setIsResizing(true)}
         />
 
@@ -216,47 +216,21 @@ export default function Writing() {
           className="flex flex-col overflow-hidden"
           style={{ width: `${100 - leftPanelWidth}%` }}
         >
+          <CompactExamControls
+            timeLeft={timeLeft}
+            isTimerRunning={isTimerRunning}
+            onToggleTimer={toggleTimer}
+            onResetTimer={resetTimer}
+            label={`Writing Test - Task ${currentTask}`}
+          />
           <WritingAnswerPanel
             currentTask={currentTask}
             answers={answers}
             onUpdateAnswer={updateAnswer}
+            onSubmit={handleSubmit}
           />
         </div>
       </div>
-
-      {/* Footer */}
-      <footer className="h-14 bg-header flex items-center justify-between px-6 border-t border-border">
-        <div className="flex items-center gap-4">
-          <button
-            onClick={() => setCurrentTask(1)}
-            className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
-              currentTask === 1
-                ? 'bg-accent text-accent-foreground'
-                : 'text-header-foreground/70 hover:text-header-foreground'
-            }`}
-          >
-            Task 1
-          </button>
-          <button
-            onClick={() => setCurrentTask(2)}
-            className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
-              currentTask === 2
-                ? 'bg-accent text-accent-foreground'
-                : 'text-header-foreground/70 hover:text-header-foreground'
-            }`}
-          >
-            Task 2
-          </button>
-        </div>
-
-        <button
-          onClick={handleSubmit}
-          className="px-6 py-2 bg-accent text-accent-foreground font-semibold rounded flex items-center gap-2 hover:opacity-90 transition-opacity"
-        >
-          <Send className="w-4 h-4" />
-          SUBMIT TEST
-        </button>
-      </footer>
     </div>
   );
 }

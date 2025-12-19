@@ -2,6 +2,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { BookOpen, Headphones, PenTool, LogOut, History } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import ieltsLogo from '@/assets/ielts-logo.png';
 
 export default function Home() {
   const { user, signOut } = useAuth();
@@ -9,12 +10,10 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
-      <header className="h-16 bg-header text-header-foreground flex items-center justify-between px-6 border-b-4 border-accent">
+      <header className="h-14 bg-header text-header-foreground flex items-center justify-between px-6 border-b border-border">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-accent rounded flex items-center justify-center">
-            <span className="font-bold text-accent-foreground text-lg">IE</span>
-          </div>
-          <span className="font-bold text-lg tracking-wide">IELTS Practice</span>
+          <img src={ieltsLogo} alt="IELTS" className="w-8 h-8 object-contain" />
+          <span className="font-bold text-base tracking-wide">IELTS Practice</span>
         </div>
         <div className="flex items-center gap-4">
           {user && (

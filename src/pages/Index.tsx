@@ -1,17 +1,15 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { SetupScreen } from '@/components/exam/SetupScreen';
-import { ExamHeader } from '@/components/exam/ExamHeader';
 import { PDFViewer } from '@/components/exam/PDFViewer';
 import { QuestionsPanel } from '@/components/exam/QuestionsPanel';
 import { NavigationGrid } from '@/components/exam/NavigationGrid';
 import { FinalReport } from '@/components/exam/FinalReport';
-import { ExamFooter } from '@/components/exam/ExamFooter';
+import { CompactExamControls } from '@/components/exam/CompactExamControls';
 import { ExamSegments, PassageNumber, ViewType, QuestionState } from '@/types/exam';
-import { BookOpen, FileQuestion, LogOut } from 'lucide-react';
+import { BookOpen, FileQuestion } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Button } from '@/components/ui/button';
 
 const INITIAL_TIME = 3600; // 60 minutes
 
@@ -19,7 +17,7 @@ const createInitialQuestions = (): QuestionState[] =>
   Array(41).fill(null).map(() => ({ answered: false, marked: false, value: '' }));
 
 export default function Index() {
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
   const { toast } = useToast();
   
   // Exam state
@@ -72,6 +70,12 @@ export default function Index() {
 
   const toggleTimer = useCallback(() => {
     setIsTimerRunning(prev => !prev);
+  }, []);
+
+  const resetTimer = useCallback(() => {
+    setTimeLeft(INITIAL_TIME);
+    setIsTimerRunning(false);
+    if (timerRef.current) clearInterval(timerRef.current);
   }, []);
 
   // Answer updates
@@ -219,14 +223,6 @@ export default function Index() {
 
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-muted">
-      {/* Header */}
-      <ExamHeader
-        currentPassage={currentPassage}
-        timeLeft={timeLeft}
-        isTimerRunning={isTimerRunning}
-        onToggleTimer={toggleTimer}
-      />
-
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden">
         {/* Left Panel */}
@@ -242,7 +238,7 @@ export default function Index() {
                 onClick={() => setCurrentPassage(num)}
                 className={`passage-btn ${currentPassage === num ? 'active' : ''}`}
               >
-                PASSAGE {num}
+                Passage {num}
               </button>
             ))}
           </div>
@@ -254,14 +250,14 @@ export default function Index() {
               className={`toggle-btn flex items-center justify-center gap-2 ${currentView === 'material' ? 'active' : ''}`}
             >
               <BookOpen className="w-3 h-3" />
-              READING MATERIAL
+              Reading
             </button>
             <button
               onClick={() => setCurrentView('questions')}
               className={`toggle-btn flex items-center justify-center gap-2 ${currentView === 'questions' ? 'active' : ''}`}
             >
               <FileQuestion className="w-3 h-3" />
-              QUESTIONS PDF
+              Questions PDF
             </button>
           </div>
 
@@ -278,9 +274,9 @@ export default function Index() {
         {/* Divider */}
         <div
           onMouseDown={handleDividerMouseDown}
-          className="w-2.5 bg-divider cursor-col-resize flex items-center justify-center text-white/50 hover:bg-primary transition-colors select-none"
+          className="w-1.5 bg-border cursor-col-resize flex items-center justify-center text-muted-foreground hover:bg-primary transition-colors select-none"
         >
-          ⋮⋮
+          ⋮
         </div>
 
         {/* Right Panel */}
@@ -288,19 +284,22 @@ export default function Index() {
           className="flex flex-col overflow-hidden"
           style={{ width: `${100 - leftPanelWidth}%` }}
         >
+          <CompactExamControls
+            timeLeft={timeLeft}
+            isTimerRunning={isTimerRunning}
+            onToggleTimer={toggleTimer}
+            onResetTimer={resetTimer}
+            label={`Reading Test - Passage ${currentPassage}`}
+          />
           <QuestionsPanel
             questions={questions}
             onUpdateAnswer={updateAnswer}
             onToggleMark={toggleMark}
+            onOpenNav={() => setShowNav(true)}
+            onSubmit={handleSubmit}
           />
         </div>
       </div>
-
-      {/* Footer */}
-      <ExamFooter
-        onOpenNav={() => setShowNav(true)}
-        onSubmit={handleSubmit}
-      />
 
       {/* Navigation Grid Modal */}
       {showNav && (
