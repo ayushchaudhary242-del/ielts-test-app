@@ -1,11 +1,18 @@
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { BookOpen, Headphones, PenTool, LogOut, History } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import ieltsLogo from '@/assets/ielts-logo.png';
 
 export default function Home() {
   const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/auth');
+  };
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -15,16 +22,17 @@ export default function Home() {
           <img src={ieltsLogo} alt="IELTS" className="w-8 h-8 object-contain" />
           <span className="font-bold text-base tracking-wide">IELTS Practice</span>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
           {user && (
             <span className="text-sm text-header-foreground/70 hidden sm:inline">
               {user.email}
             </span>
           )}
+          <ThemeToggle />
           <Button
             variant="outline"
             size="sm"
-            onClick={signOut}
+            onClick={handleSignOut}
             className="gap-2 bg-transparent border-header-foreground/30 text-header-foreground hover:bg-header-foreground/10"
           >
             <LogOut className="w-4 h-4" />

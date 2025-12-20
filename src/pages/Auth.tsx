@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { z } from 'zod';
 import { Shield } from 'lucide-react';
@@ -16,11 +17,16 @@ const authSchema = z.object({
   password: z.string().min(6, 'Password must be at least 6 characters')
 });
 
+// Pre-defined admin password
+const ADMIN_PASSWORD = 'ielts@admin2024';
+
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showAdminDialog, setShowAdminDialog] = useState(false);
+  const [adminPassword, setAdminPassword] = useState('');
   const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -112,6 +118,20 @@ export default function Auth() {
     }
   };
 
+  const handleAdminAccess = () => {
+    if (adminPassword === ADMIN_PASSWORD) {
+      setShowAdminDialog(false);
+      setAdminPassword('');
+      navigate('/admin');
+    } else {
+      toast({
+        title: 'Access Denied',
+        description: 'Incorrect password.',
+        variant: 'destructive'
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 flex items-center justify-center p-4 relative">
       {/* Decorative elements */}
@@ -120,13 +140,41 @@ export default function Auth() {
       <div className="absolute bottom-20 right-10 w-40 h-40 bg-accent/10 rounded-full blur-3xl" />
 
       {/* Secret admin button */}
-      <Link
-        to="/admin"
+      <button
+        onClick={() => setShowAdminDialog(true)}
         className="absolute bottom-4 left-4 p-2 text-muted-foreground/30 hover:text-primary transition-colors"
         title="Admin Panel"
       >
         <Shield className="w-4 h-4" />
-      </Link>
+      </button>
+
+      {/* Admin Password Dialog */}
+      <Dialog open={showAdminDialog} onOpenChange={setShowAdminDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Admin Access</DialogTitle>
+            <DialogDescription>Enter the admin password to continue.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Input
+              type="password"
+              placeholder="Enter password"
+              value={adminPassword}
+              onChange={(e) => setAdminPassword(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleAdminAccess()}
+              className="bg-secondary border-border"
+            />
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setShowAdminDialog(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleAdminAccess}>
+                Access
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Card className="w-full max-w-md border-t-4 border-t-primary shadow-xl bg-card/95 backdrop-blur">
         <CardHeader className="text-center pb-2">
