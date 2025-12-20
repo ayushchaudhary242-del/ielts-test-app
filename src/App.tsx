@@ -10,6 +10,7 @@ import Listening from "./pages/Listening";
 import Writing from "./pages/Writing";
 import History from "./pages/History";
 import Auth from "./pages/Auth";
+import AdminPanel from "./pages/AdminPanel";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -70,6 +71,7 @@ const App = () => (
             <Route path="/listening" element={<ProtectedRoute><Listening /></ProtectedRoute>} />
             <Route path="/writing" element={<ProtectedRoute><Writing /></ProtectedRoute>} />
             <Route path="/history" element={<ProtectedRoute><History /></ProtectedRoute>} />
+            <Route path="/admin" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
