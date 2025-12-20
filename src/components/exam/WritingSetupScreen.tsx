@@ -48,10 +48,10 @@ export function WritingSetupScreen({ onLaunch }: WritingSetupScreenProps) {
   };
 
   return (
-    <div className="fixed inset-0 bg-background z-50 flex flex-col items-center justify-center p-6 overflow-y-auto">
-      <div className="setup-card w-full animate-fade-in">
+    <div className="fixed inset-0 bg-gradient-to-br from-background via-background to-primary/5 z-50 flex flex-col items-center justify-center p-6 overflow-y-auto">
+      <div className="setup-card w-full animate-fade-in border border-border">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8 pb-6 border-b-4 border-accent">
+        <div className="flex items-center justify-between mb-8 pb-6 border-b-2 border-primary/20">
           <div className="flex items-center gap-3">
             <Link to="/" className="p-2 hover:bg-muted rounded transition-colors">
               <ArrowLeft className="w-5 h-5 text-muted-foreground" />
@@ -93,7 +93,7 @@ export function WritingSetupScreen({ onLaunch }: WritingSetupScreenProps) {
               type="file"
               accept="application/pdf"
               onChange={handleFileChange}
-              className="w-full px-4 py-3 border-2 border-dashed border-border rounded-lg bg-secondary file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:bg-primary file:text-primary-foreground file:font-semibold file:cursor-pointer hover:border-primary transition-colors"
+              className="w-full px-4 py-3 border-2 border-dashed border-border rounded-lg bg-card file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:bg-primary file:text-primary-foreground file:font-semibold file:cursor-pointer hover:border-primary transition-colors"
             />
           </div>
           {file && (
@@ -111,7 +111,7 @@ export function WritingSetupScreen({ onLaunch }: WritingSetupScreenProps) {
             Configure Task Page Ranges
           </label>
 
-          <div className="bg-secondary rounded-lg p-4">
+          <div className="bg-muted/50 rounded-lg p-4 border border-border">
             <div className="grid grid-cols-[1.5fr_1fr] gap-3 mb-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
               <div>Task</div>
               <div>PDF Pages</div>

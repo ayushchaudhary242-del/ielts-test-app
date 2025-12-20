@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { ArrowLeft, Clock, Calendar, FileText } from 'lucide-react';
 import { format } from 'date-fns';
+import { TestResultDetails } from '@/components/exam/TestResultDetails';
 
 interface ExamResult {
   id: string;
@@ -49,7 +50,6 @@ export default function History() {
       return answers.filter((a: any) => a?.answer?.trim()).length;
     }
     if (typeof answers === 'object' && answers !== null) {
-      // Writing test format
       if ('task1' in answers || 'task2' in answers) {
         let count = 0;
         if (answers.task1?.trim()) count++;
@@ -60,7 +60,7 @@ export default function History() {
     return 0;
   };
 
-  const getTestType = (answers: any) => {
+  const getTestType = (answers: any): 'Writing' | 'Reading/Listening' => {
     if (typeof answers === 'object' && answers !== null && ('task1' in answers || 'task2' in answers)) {
       return 'Writing';
     }
@@ -69,7 +69,6 @@ export default function History() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <header className="h-14 bg-header text-header-foreground flex items-center px-6 border-b border-border">
         <Link
           to="/"
@@ -102,38 +101,42 @@ export default function History() {
           </div>
         ) : (
           <div className="space-y-4">
-            {results.map((result) => (
-              <div
-                key={result.id}
-                className="bg-card border border-border rounded-lg p-5 hover:border-primary/50 transition-colors"
-              >
-                <div className="flex items-start justify-between">
-                  <div>
-                    <span className="inline-block px-2 py-0.5 bg-primary/10 text-primary text-xs font-medium rounded mb-2">
-                      {getTestType(result.answers)}
-                    </span>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      <span className="flex items-center gap-1.5">
-                        <Calendar className="w-4 h-4" />
-                        {format(new Date(result.completed_at), 'MMM d, yyyy h:mm a')}
+            {results.map((result) => {
+              const testType = getTestType(result.answers);
+              return (
+                <div
+                  key={result.id}
+                  className="bg-card border border-border rounded-lg p-5 hover:border-primary/50 transition-colors"
+                >
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <span className="inline-block px-2 py-0.5 bg-primary/10 text-primary text-xs font-medium rounded mb-2">
+                        {testType}
                       </span>
-                      <span className="flex items-center gap-1.5">
-                        <Clock className="w-4 h-4" />
-                        {formatDuration(result.time_taken_seconds)}
-                      </span>
+                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                        <span className="flex items-center gap-1.5">
+                          <Calendar className="w-4 h-4" />
+                          {format(new Date(result.completed_at), 'MMM d, yyyy h:mm a')}
+                        </span>
+                        <span className="flex items-center gap-1.5">
+                          <Clock className="w-4 h-4" />
+                          {formatDuration(result.time_taken_seconds)}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-2xl font-bold text-foreground">
+                        {getAnswerCount(result.answers)}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {testType === 'Writing' ? 'tasks completed' : 'answered'}
+                      </p>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-2xl font-bold text-foreground">
-                      {getAnswerCount(result.answers)}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {getTestType(result.answers) === 'Writing' ? 'tasks completed' : 'answered'}
-                    </p>
-                  </div>
+                  <TestResultDetails answers={result.answers} testType={testType} />
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </main>
