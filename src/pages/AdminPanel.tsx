@@ -1,14 +1,11 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Users, UserPlus, Trash2, Shield, Mail, Clock } from 'lucide-react';
+import { ArrowLeft, Users, UserPlus, Trash2, Shield, Mail, Clock, LogOut } from 'lucide-react';
 import { format } from 'date-fns';
-
-// Admin password for direct access
-const ADMIN_PASSWORD = 'ielts@admin2024';
 
 interface Profile {
   id: string;
@@ -26,87 +23,104 @@ interface WhitelistEntry {
 
 export default function AdminPanel() {
   const navigate = useNavigate();
-  const location = useLocation();
   const { toast } = useToast();
-  const [isAuthorized, setIsAuthorized] = useState(false);
   const [loading, setLoading] = useState(true);
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [whitelist, setWhitelist] = useState<WhitelistEntry[]>([]);
   const [newEmail, setNewEmail] = useState('');
   const [activeTab, setActiveTab] = useState<'users' | 'whitelist'>('users');
-  const [passwordInput, setPasswordInput] = useState('');
 
   useEffect(() => {
-    // Check if accessed via password from Auth page (stored in sessionStorage)
+    // Check if accessed via password from Auth page
     const adminAccess = sessionStorage.getItem('adminAccess');
-    if (adminAccess === 'granted') {
-      setIsAuthorized(true);
-      setLoading(false);
-      fetchData();
-    } else {
-      setLoading(false);
+    if (adminAccess !== 'granted') {
+      navigate('/auth');
+      return;
     }
-  }, []);
+    fetchData();
+  }, [navigate]);
 
-  const handlePasswordSubmit = () => {
-    if (passwordInput === ADMIN_PASSWORD) {
-      sessionStorage.setItem('adminAccess', 'granted');
-      setIsAuthorized(true);
-      fetchData();
-      toast({ title: 'Access Granted', description: 'Welcome to the Admin Panel.' });
-    } else {
-      toast({
-        title: 'Access Denied',
-        description: 'Incorrect password.',
-        variant: 'destructive'
-      });
-    }
-    setPasswordInput('');
-  };
+  const getAdminPassword = () => sessionStorage.getItem('adminPassword') || '';
 
   const fetchData = async () => {
-    const [profilesRes, whitelistRes] = await Promise.all([
-      supabase.from('profiles').select('*').order('created_at', { ascending: false }),
-      supabase.from('email_whitelist').select('*').order('created_at', { ascending: false })
-    ]);
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('admin-whitelist', {
+        body: { action: 'list', password: getAdminPassword() }
+      });
 
-    if (profilesRes.data) setProfiles(profilesRes.data);
-    if (whitelistRes.data) setWhitelist(whitelistRes.data);
+      if (error) throw error;
+      
+      setProfiles(data.profiles || []);
+      setWhitelist(data.whitelist || []);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch data. Please try again.',
+        variant: 'destructive'
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const addToWhitelist = async () => {
     if (!newEmail.trim()) return;
 
-    const emailLower = newEmail.toLowerCase().trim();
-    
-    const { error } = await supabase
-      .from('email_whitelist')
-      .insert({ email: emailLower });
-
-    if (error) {
-      toast({
-        title: 'Error',
-        description: error.message.includes('duplicate') 
-          ? 'This email is already whitelisted.' 
-          : error.message,
-        variant: 'destructive'
+    try {
+      const { data, error } = await supabase.functions.invoke('admin-whitelist', {
+        body: { action: 'add', password: getAdminPassword(), email: newEmail.trim() }
       });
-    } else {
+
+      if (error) throw error;
+      
+      if (data.error) {
+        toast({
+          title: 'Error',
+          description: data.error,
+          variant: 'destructive'
+        });
+        return;
+      }
+
       toast({ title: 'Success', description: 'Email added to whitelist.' });
       setNewEmail('');
       fetchData();
+    } catch (error) {
+      console.error('Error adding to whitelist:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to add email. Please try again.',
+        variant: 'destructive'
+      });
     }
   };
 
   const removeFromWhitelist = async (id: string) => {
-    const { error } = await supabase.from('email_whitelist').delete().eq('id', id);
-    
-    if (error) {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
-    } else {
+    try {
+      const { data, error } = await supabase.functions.invoke('admin-whitelist', {
+        body: { action: 'remove', password: getAdminPassword(), id }
+      });
+
+      if (error) throw error;
+      
       toast({ title: 'Removed', description: 'Email removed from whitelist.' });
       fetchData();
+    } catch (error) {
+      console.error('Error removing from whitelist:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to remove email. Please try again.',
+        variant: 'destructive'
+      });
     }
+  };
+
+  const handleLogout = () => {
+    sessionStorage.removeItem('adminAccess');
+    sessionStorage.removeItem('adminPassword');
+    navigate('/auth');
   };
 
   if (loading) {
@@ -117,49 +131,20 @@ export default function AdminPanel() {
     );
   }
 
-  // Show password prompt if not authorized
-  if (!isAuthorized) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <div className="bg-card border border-border rounded-lg p-6 w-full max-w-md shadow-lg">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <Shield className="w-6 h-6 text-primary" />
-            <h2 className="text-xl font-bold text-foreground">Admin Access</h2>
-          </div>
-          <p className="text-muted-foreground text-center mb-4">
-            Enter the admin password to continue.
-          </p>
-          <Input
-            type="password"
-            placeholder="Enter password"
-            value={passwordInput}
-            onChange={(e) => setPasswordInput(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handlePasswordSubmit()}
-            className="mb-4"
-          />
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => navigate('/auth')} className="flex-1">
-              Cancel
-            </Button>
-            <Button onClick={handlePasswordSubmit} className="flex-1">
-              Access
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-background">
       <header className="h-14 bg-header text-header-foreground flex items-center justify-between px-6 border-b border-border">
         <div className="flex items-center gap-3">
-          <button onClick={() => navigate('/')} className="p-2 hover:bg-header/80 rounded transition-colors">
+          <button onClick={() => navigate('/auth')} className="p-2 hover:bg-header/80 rounded transition-colors">
             <ArrowLeft className="w-5 h-5" />
           </button>
           <Shield className="w-5 h-5 text-accent" />
           <span className="font-bold">Admin Panel</span>
         </div>
+        <Button variant="ghost" size="sm" onClick={handleLogout} className="text-header-foreground hover:bg-header/80">
+          <LogOut className="w-4 h-4 mr-2" />
+          Logout
+        </Button>
       </header>
 
       <main className="max-w-4xl mx-auto p-6">
@@ -229,7 +214,7 @@ export default function AdminPanel() {
                     <div className="font-medium text-foreground flex items-center gap-2">
                       {entry.email}
                       {entry.used_at && (
-                        <span className="text-xs bg-success/20 text-success px-2 py-0.5 rounded">Used</span>
+                        <span className="text-xs bg-green-500/20 text-green-600 px-2 py-0.5 rounded">Used</span>
                       )}
                     </div>
                     <div className="text-sm text-muted-foreground">
