@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Users, UserPlus, Trash2, Shield, Mail, Clock } from 'lucide-react';
 import { format } from 'date-fns';
+
+// Admin password for direct access
+const ADMIN_PASSWORD = 'ielts@admin2024';
 
 interface Profile {
   id: string;
@@ -23,42 +25,43 @@ interface WhitelistEntry {
 }
 
 export default function AdminPanel() {
-  const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [isAuthorized, setIsAuthorized] = useState(false);
   const [loading, setLoading] = useState(true);
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [whitelist, setWhitelist] = useState<WhitelistEntry[]>([]);
   const [newEmail, setNewEmail] = useState('');
   const [activeTab, setActiveTab] = useState<'users' | 'whitelist'>('users');
+  const [passwordInput, setPasswordInput] = useState('');
 
   useEffect(() => {
-    checkAdminStatus();
-  }, [user]);
-
-  const checkAdminStatus = async () => {
-    if (!user) {
-      navigate('/auth');
-      return;
+    // Check if accessed via password from Auth page (stored in sessionStorage)
+    const adminAccess = sessionStorage.getItem('adminAccess');
+    if (adminAccess === 'granted') {
+      setIsAuthorized(true);
+      setLoading(false);
+      fetchData();
+    } else {
+      setLoading(false);
     }
+  }, []);
 
-    const { data, error } = await supabase
-      .rpc('has_role', { _user_id: user.id, _role: 'admin' });
-
-    if (error || !data) {
+  const handlePasswordSubmit = () => {
+    if (passwordInput === ADMIN_PASSWORD) {
+      sessionStorage.setItem('adminAccess', 'granted');
+      setIsAuthorized(true);
+      fetchData();
+      toast({ title: 'Access Granted', description: 'Welcome to the Admin Panel.' });
+    } else {
       toast({
         title: 'Access Denied',
-        description: 'You do not have admin privileges.',
+        description: 'Incorrect password.',
         variant: 'destructive'
       });
-      navigate('/');
-      return;
     }
-
-    setIsAdmin(true);
-    setLoading(false);
-    fetchData();
+    setPasswordInput('');
   };
 
   const fetchData = async () => {
@@ -78,7 +81,7 @@ export default function AdminPanel() {
     
     const { error } = await supabase
       .from('email_whitelist')
-      .insert({ email: emailLower, added_by: user?.id });
+      .insert({ email: emailLower });
 
     if (error) {
       toast({
@@ -114,7 +117,38 @@ export default function AdminPanel() {
     );
   }
 
-  if (!isAdmin) return null;
+  // Show password prompt if not authorized
+  if (!isAuthorized) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="bg-card border border-border rounded-lg p-6 w-full max-w-md shadow-lg">
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <Shield className="w-6 h-6 text-primary" />
+            <h2 className="text-xl font-bold text-foreground">Admin Access</h2>
+          </div>
+          <p className="text-muted-foreground text-center mb-4">
+            Enter the admin password to continue.
+          </p>
+          <Input
+            type="password"
+            placeholder="Enter password"
+            value={passwordInput}
+            onChange={(e) => setPasswordInput(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handlePasswordSubmit()}
+            className="mb-4"
+          />
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => navigate('/auth')} className="flex-1">
+              Cancel
+            </Button>
+            <Button onClick={handlePasswordSubmit} className="flex-1">
+              Access
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
