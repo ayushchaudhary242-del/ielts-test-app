@@ -1,1 +1,4 @@
 project_id = "ewpcntkdowmgfhblwjjg"
+
+[functions.admin-whitelist]
+verify_jwt = false
