@@ -120,6 +120,7 @@ export default function Auth() {
 
   const handleAdminAccess = () => {
     if (adminPassword === ADMIN_PASSWORD) {
+      sessionStorage.setItem('adminAccess', 'granted');
       setShowAdminDialog(false);
       setAdminPassword('');
       navigate('/admin');
