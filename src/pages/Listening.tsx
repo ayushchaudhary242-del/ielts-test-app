@@ -49,7 +49,7 @@ export default function Listening() {
   const currentPageRange = currentSectionData?.questionPages || [1, 1];
 
   // Launch exam
-  const handleLaunch = (audio: File, pdf: File, sectionConfig: ListeningSection[]) => {
+  const handleLaunch = (audio: File | null, pdf: File, sectionConfig: ListeningSection[]) => {
     setAudioFile(audio);
     setPdfFile(pdf);
     setSections(sectionConfig);

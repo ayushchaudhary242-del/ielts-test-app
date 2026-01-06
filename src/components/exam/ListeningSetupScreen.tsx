@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 
 interface ListeningSetupScreenProps {
-  onLaunch: (audioFile: File, pdfFile: File, sections: ListeningSection[]) => void;
+  onLaunch: (audioFile: File | null, pdfFile: File, sections: ListeningSection[]) => void;
 }
 
 export function ListeningSetupScreen({ onLaunch }: ListeningSetupScreenProps) {
@@ -74,10 +74,6 @@ export function ListeningSetupScreen({ onLaunch }: ListeningSetupScreenProps) {
   };
 
   const handleLaunch = () => {
-    if (!audioFile) {
-      alert('Please upload an audio file.');
-      return;
-    }
     if (!pdfFile) {
       alert('Please upload a questions PDF file.');
       return;
@@ -126,7 +122,7 @@ export function ListeningSetupScreen({ onLaunch }: ListeningSetupScreenProps) {
           <div>
             <label className="flex items-center gap-2 text-sm font-semibold text-foreground mb-3">
               <Headphones className="w-4 h-4" />
-              Upload Audio File
+              Upload Audio File <span className="text-muted-foreground font-normal">(optional)</span>
             </label>
             <div className="relative">
               <input
