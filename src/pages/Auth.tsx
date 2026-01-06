@@ -18,7 +18,7 @@ const authSchema = z.object({
 });
 
 // Pre-defined admin password
-const ADMIN_PASSWORD = 'ielts@admin2024';
+const ADMIN_PASSWORD = 'kevinha514';
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
