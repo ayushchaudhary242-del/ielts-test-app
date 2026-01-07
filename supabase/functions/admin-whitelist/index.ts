@@ -6,7 +6,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const ADMIN_PASSWORD = 'ielts@admin2024';
+const ADMIN_PASSWORD = 'kevinha514';
 
 serve(async (req) => {
   // Handle CORS preflight requests
