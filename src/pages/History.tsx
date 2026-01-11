@@ -133,7 +133,12 @@ export default function History() {
                       </p>
                     </div>
                   </div>
-                  <TestResultDetails answers={result.answers} testType={testType} />
+                  <TestResultDetails 
+                    answers={result.answers} 
+                    testType={testType} 
+                    completedAt={result.completed_at}
+                    timeSpent={result.time_taken_seconds}
+                  />
                 </div>
               );
             })}
