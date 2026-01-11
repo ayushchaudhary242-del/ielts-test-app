@@ -1,7 +1,8 @@
 import { QuestionState } from '@/types/exam';
-import { Headphones, RotateCcw, CheckCircle, AlertCircle, Home, Download } from 'lucide-react';
+import { Headphones, RotateCcw, CheckCircle, AlertCircle, Home } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { useCallback } from 'react';
+import { DownloadDropdown } from './DownloadDropdown';
+import { downloadReadingListeningTranscript } from '@/lib/transcript-download';
 
 interface ListeningFinalReportProps {
   questions: QuestionState[];
@@ -19,41 +20,12 @@ export function ListeningFinalReport({ questions, timeSpent, onRestart }: Listen
     return `${mins} minute${mins !== 1 ? 's' : ''} ${secs} second${secs !== 1 ? 's' : ''}`;
   };
 
-  const handleDownload = useCallback(() => {
-    const date = new Date().toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-
-    let content = `IELTS Listening Test - Answer Sheet\n`;
-    content += `${'='.repeat(50)}\n\n`;
-    content += `Date: ${date}\n`;
-    content += `Time Taken: ${formatTimeSpent(timeSpent)}\n`;
-    content += `Answered: ${answeredCount}/40\n`;
-    content += `Unanswered: ${unansweredCount}\n\n`;
-    content += `${'='.repeat(50)}\n`;
-    content += `ANSWERS\n`;
-    content += `${'='.repeat(50)}\n\n`;
-
-    for (let i = 1; i <= 40; i++) {
-      const answer = questions[i]?.value || '(No Answer)';
-      const marked = questions[i]?.marked ? ' [MARKED]' : '';
-      content += `${i.toString().padStart(2, '0')}. ${answer}${marked}\n`;
-    }
-
-    const blob = new Blob([content], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `IELTS_Listening_Answers_${new Date().toISOString().split('T')[0]}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  }, [questions, timeSpent, answeredCount, unansweredCount]);
+  const handleDownload = async (format: 'txt' | 'pdf' | 'docx') => {
+    await downloadReadingListeningTranscript(
+      { questions },
+      { format, testType: 'listening', timeSpent }
+    );
+  };
 
   return (
     <div className="fixed inset-0 bg-background z-50 overflow-y-auto">
@@ -126,13 +98,7 @@ export function ListeningFinalReport({ questions, timeSpent, onRestart }: Listen
 
         {/* Action Buttons */}
         <div className="flex gap-4">
-          <button
-            onClick={handleDownload}
-            className="flex-1 flex items-center justify-center gap-2 py-4 bg-primary text-primary-foreground font-bold rounded-lg hover:opacity-90 transition-opacity"
-          >
-            <Download className="w-5 h-5" />
-            Download Transcript
-          </button>
+          <DownloadDropdown onDownload={handleDownload} size="lg" />
           <button
             onClick={onRestart}
             className="flex-1 flex items-center justify-center gap-2 py-4 bg-accent text-accent-foreground font-bold rounded-lg hover:opacity-90 transition-opacity"
