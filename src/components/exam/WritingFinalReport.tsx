@@ -1,6 +1,7 @@
 import { WritingAnswers } from '@/types/exam';
-import { ArrowLeft, Clock, FileText, RotateCcw, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Clock, FileText, RotateCcw, CheckCircle, Download } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useCallback } from 'react';
 
 interface WritingFinalReportProps {
   answers: WritingAnswers;
@@ -20,6 +21,44 @@ export function WritingFinalReport({ answers, timeTaken, onRestart }: WritingFin
 
   const task1Complete = task1Words >= 150;
   const task2Complete = task2Words >= 250;
+
+  const handleDownload = useCallback(() => {
+    const date = new Date().toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+
+    let content = `IELTS Writing Test - Answer Sheet\n`;
+    content += `${'='.repeat(60)}\n\n`;
+    content += `Date: ${date}\n`;
+    content += `Time Taken: ${formatTime(timeTaken)}\n`;
+    content += `Total Words: ${task1Words + task2Words}\n`;
+    content += `Tasks Complete: ${(task1Complete ? 1 : 0) + (task2Complete ? 1 : 0)}/2\n\n`;
+    
+    content += `${'='.repeat(60)}\n`;
+    content += `TASK 1 (${task1Words} words - Target: 150+)\n`;
+    content += `${'='.repeat(60)}\n\n`;
+    content += answers.task1 || '(No Response)\n';
+    content += `\n\n`;
+    
+    content += `${'='.repeat(60)}\n`;
+    content += `TASK 2 (${task2Words} words - Target: 250+)\n`;
+    content += `${'='.repeat(60)}\n\n`;
+    content += answers.task2 || '(No Response)\n';
+
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `IELTS_Writing_Answers_${new Date().toISOString().split('T')[0]}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, [answers, timeTaken, task1Words, task2Words, task1Complete, task2Complete]);
 
   return (
     <div className="fixed inset-0 bg-background z-50 flex flex-col items-center justify-center p-6 overflow-y-auto">
@@ -104,6 +143,13 @@ export function WritingFinalReport({ answers, timeTaken, onRestart }: WritingFin
 
         {/* Actions */}
         <div className="flex gap-4">
+          <button
+            onClick={handleDownload}
+            className="flex-1 py-3 bg-primary text-primary-foreground font-semibold rounded-lg flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
+          >
+            <Download className="w-4 h-4" />
+            Download Transcript
+          </button>
           <Link
             to="/"
             className="flex-1 py-3 bg-secondary text-foreground font-semibold rounded-lg flex items-center justify-center gap-2 hover:bg-secondary/80 transition-colors"

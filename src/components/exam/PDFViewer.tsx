@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
@@ -16,6 +16,26 @@ export function PDFViewer({ file, startPage, endPage }: PDFViewerProps) {
   const [numPages, setNumPages] = useState<number>(0);
   const [pdfUrl, setPdfUrl] = useState<string>('');
   const [containerWidth, setContainerWidth] = useState<number>(600);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const scrollPositionsRef = useRef<Map<string, number>>(new Map());
+
+  // Create a key based on the page range to track scroll positions
+  const rangeKey = `${startPage}-${endPage}`;
+
+  // Save scroll position when it changes
+  const handleScroll = useCallback(() => {
+    if (scrollContainerRef.current) {
+      scrollPositionsRef.current.set(rangeKey, scrollContainerRef.current.scrollTop);
+    }
+  }, [rangeKey]);
+
+  // Restore scroll position when page range changes
+  useEffect(() => {
+    if (scrollContainerRef.current) {
+      const savedPosition = scrollPositionsRef.current.get(rangeKey) || 0;
+      scrollContainerRef.current.scrollTop = savedPosition;
+    }
+  }, [rangeKey]);
 
   useEffect(() => {
     const url = URL.createObjectURL(file);
@@ -47,7 +67,14 @@ export function PDFViewer({ file, startPage, endPage }: PDFViewerProps) {
   if (!pdfUrl) return null;
 
   return (
-    <div ref={measureRef} className="flex-1 overflow-y-auto p-4 flex flex-col items-center bg-panel-left">
+    <div 
+      ref={(node) => {
+        measureRef(node);
+        (scrollContainerRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
+      }}
+      onScroll={handleScroll}
+      className="flex-1 overflow-y-auto p-4 flex flex-col items-center bg-panel-left"
+    >
       <Document
         file={pdfUrl}
         onLoadSuccess={onDocumentLoadSuccess}
