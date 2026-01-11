@@ -1,5 +1,6 @@
 import { WritingAnswers } from '@/types/exam';
 import { Send } from 'lucide-react';
+import { useRef, useEffect, useCallback } from 'react';
 
 interface WritingAnswerPanelProps {
   currentTask: 1 | 2;
@@ -17,6 +18,25 @@ export function WritingAnswerPanel({
   const currentAnswer = currentTask === 1 ? answers.task1 : answers.task2;
   const wordCount = currentAnswer.trim() ? currentAnswer.trim().split(/\s+/).length : 0;
   const targetWords = currentTask === 1 ? 150 : 250;
+
+  // Store scroll positions for each task's textarea
+  const scrollPositionsRef = useRef<Map<number, number>>(new Map());
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Save scroll position when it changes
+  const handleScroll = useCallback(() => {
+    if (textareaRef.current) {
+      scrollPositionsRef.current.set(currentTask, textareaRef.current.scrollTop);
+    }
+  }, [currentTask]);
+
+  // Restore scroll position when task changes
+  useEffect(() => {
+    if (textareaRef.current) {
+      const savedPosition = scrollPositionsRef.current.get(currentTask) || 0;
+      textareaRef.current.scrollTop = savedPosition;
+    }
+  }, [currentTask]);
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden bg-panel-right">
@@ -42,6 +62,8 @@ export function WritingAnswerPanel({
 
       <div className="flex-1 p-3 overflow-hidden">
         <textarea
+          ref={textareaRef}
+          onScroll={handleScroll}
           value={currentAnswer}
           onChange={e => onUpdateAnswer(currentTask, e.target.value)}
           placeholder={

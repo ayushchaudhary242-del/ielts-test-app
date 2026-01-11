@@ -1,5 +1,6 @@
 import { QuestionState } from '@/types/exam';
 import { BookmarkPlus, Check, Grid3X3, Send } from 'lucide-react';
+import { useRef, useEffect, useCallback } from 'react';
 
 interface QuestionsPanelProps {
   questions: QuestionState[];
@@ -17,10 +18,30 @@ export function QuestionsPanel({
   onSubmit 
 }: QuestionsPanelProps) {
   const answeredCount = questions.slice(1).filter(q => q.answered).length;
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const scrollPositionRef = useRef<number>(0);
+
+  // Save scroll position when it changes
+  const handleScroll = useCallback(() => {
+    if (scrollContainerRef.current) {
+      scrollPositionRef.current = scrollContainerRef.current.scrollTop;
+    }
+  }, []);
+
+  // Restore scroll position on mount and after navigation
+  useEffect(() => {
+    if (scrollContainerRef.current && scrollPositionRef.current > 0) {
+      scrollContainerRef.current.scrollTop = scrollPositionRef.current;
+    }
+  });
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden bg-panel-right">
-      <div className="flex-1 overflow-y-auto p-4">
+      <div 
+        ref={scrollContainerRef}
+        onScroll={handleScroll}
+        className="flex-1 overflow-y-auto p-4"
+      >
         <div className="max-w-xl mx-auto">
           <h2 className="text-base font-bold text-foreground mb-4 pb-2 border-b border-border">
             Answer Sheet ({answeredCount}/40)
