@@ -55,29 +55,42 @@ export function PDFViewer({
     setPagesLoaded(prev => new Set(prev).add(pageNum));
   }, []);
 
-  // Restore scroll position after first page loads
+  // Restore scroll position only once enough content has rendered to reach it.
   useEffect(() => {
-    if (
-      scrollContainerRef.current && 
-      getScrollPosition && 
-      pagesLoaded.size > 0 && 
-      !hasRestoredScroll.current
-    ) {
+    if (!scrollContainerRef.current || !getScrollPosition || hasRestoredScroll.current) return;
+
+    const savedPosition = getScrollPosition(rangeKey);
+
+    // If user never scrolled, don't force anything.
+    if (savedPosition <= 0) {
       hasRestoredScroll.current = true;
-      isRestoringScroll.current = true;
-      const savedPosition = getScrollPosition(rangeKey);
-      
-      // Use setTimeout to ensure DOM has updated
-      setTimeout(() => {
-        if (scrollContainerRef.current) {
-          scrollContainerRef.current.scrollTop = savedPosition;
-        }
-        requestAnimationFrame(() => {
-          isRestoringScroll.current = false;
-        });
-      }, 50);
+      return;
     }
-  }, [pagesLoaded, rangeKey, getScrollPosition]);
+
+    const expectedCount = Math.max(1, Math.min(endPage, numPages || endPage) - startPage + 1);
+    const container = scrollContainerRef.current;
+
+    const canReachSavedPosition =
+      container.scrollHeight - container.clientHeight >= savedPosition - 8;
+
+    const allPagesRendered = pagesLoaded.size >= expectedCount;
+
+    if (!canReachSavedPosition && !allPagesRendered) return;
+
+    hasRestoredScroll.current = true;
+    isRestoringScroll.current = true;
+
+    setTimeout(() => {
+      const el = scrollContainerRef.current;
+      if (el) {
+        const maxScrollTop = Math.max(0, el.scrollHeight - el.clientHeight);
+        el.scrollTop = Math.min(savedPosition, maxScrollTop);
+      }
+      requestAnimationFrame(() => {
+        isRestoringScroll.current = false;
+      });
+    }, 50);
+  }, [pagesLoaded, rangeKey, getScrollPosition, startPage, endPage, numPages]);
 
   useEffect(() => {
     const url = URL.createObjectURL(file);
