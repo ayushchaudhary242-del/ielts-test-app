@@ -10,32 +10,50 @@ interface PDFViewerProps {
   file: File;
   startPage: number;
   endPage: number;
+  scrollKey?: string;
+  onScrollChange?: (key: string, position: number) => void;
+  getScrollPosition?: (key: string) => number;
 }
 
-export function PDFViewer({ file, startPage, endPage }: PDFViewerProps) {
+export function PDFViewer({ 
+  file, 
+  startPage, 
+  endPage,
+  scrollKey,
+  onScrollChange,
+  getScrollPosition 
+}: PDFViewerProps) {
   const [numPages, setNumPages] = useState<number>(0);
   const [pdfUrl, setPdfUrl] = useState<string>('');
   const [containerWidth, setContainerWidth] = useState<number>(600);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const scrollPositionsRef = useRef<Map<string, number>>(new Map());
+  const isRestoringScroll = useRef(false);
 
   // Create a key based on the page range to track scroll positions
-  const rangeKey = `${startPage}-${endPage}`;
+  const rangeKey = scrollKey || `${startPage}-${endPage}`;
 
   // Save scroll position when it changes
   const handleScroll = useCallback(() => {
-    if (scrollContainerRef.current) {
-      scrollPositionsRef.current.set(rangeKey, scrollContainerRef.current.scrollTop);
+    if (scrollContainerRef.current && !isRestoringScroll.current) {
+      const position = scrollContainerRef.current.scrollTop;
+      if (onScrollChange) {
+        onScrollChange(rangeKey, position);
+      }
     }
-  }, [rangeKey]);
+  }, [rangeKey, onScrollChange]);
 
   // Restore scroll position when page range changes
   useEffect(() => {
-    if (scrollContainerRef.current) {
-      const savedPosition = scrollPositionsRef.current.get(rangeKey) || 0;
+    if (scrollContainerRef.current && getScrollPosition) {
+      isRestoringScroll.current = true;
+      const savedPosition = getScrollPosition(rangeKey);
       scrollContainerRef.current.scrollTop = savedPosition;
+      // Reset the flag after a short delay to allow the scroll to complete
+      requestAnimationFrame(() => {
+        isRestoringScroll.current = false;
+      });
     }
-  }, [rangeKey]);
+  }, [rangeKey, getScrollPosition]);
 
   useEffect(() => {
     const url = URL.createObjectURL(file);

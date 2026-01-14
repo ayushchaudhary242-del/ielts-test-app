@@ -8,6 +8,9 @@ interface QuestionsPanelProps {
   onToggleMark: (index: number) => void;
   onOpenNav?: () => void;
   onSubmit?: () => void;
+  scrollKey?: string;
+  onScrollChange?: (key: string, position: number) => void;
+  getScrollPosition?: (key: string) => number;
 }
 
 export function QuestionsPanel({ 
@@ -15,25 +18,36 @@ export function QuestionsPanel({
   onUpdateAnswer, 
   onToggleMark,
   onOpenNav,
-  onSubmit 
+  onSubmit,
+  scrollKey = 'questions',
+  onScrollChange,
+  getScrollPosition
 }: QuestionsPanelProps) {
   const answeredCount = questions.slice(1).filter(q => q.answered).length;
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const scrollPositionRef = useRef<number>(0);
+  const isRestoringScroll = useRef(false);
 
   // Save scroll position when it changes
   const handleScroll = useCallback(() => {
-    if (scrollContainerRef.current) {
-      scrollPositionRef.current = scrollContainerRef.current.scrollTop;
+    if (scrollContainerRef.current && !isRestoringScroll.current) {
+      const position = scrollContainerRef.current.scrollTop;
+      if (onScrollChange) {
+        onScrollChange(scrollKey, position);
+      }
     }
-  }, []);
+  }, [scrollKey, onScrollChange]);
 
-  // Restore scroll position on mount and after navigation
+  // Restore scroll position on mount and when key changes
   useEffect(() => {
-    if (scrollContainerRef.current && scrollPositionRef.current > 0) {
-      scrollContainerRef.current.scrollTop = scrollPositionRef.current;
+    if (scrollContainerRef.current && getScrollPosition) {
+      isRestoringScroll.current = true;
+      const savedPosition = getScrollPosition(scrollKey);
+      scrollContainerRef.current.scrollTop = savedPosition;
+      requestAnimationFrame(() => {
+        isRestoringScroll.current = false;
+      });
     }
-  });
+  }, [scrollKey, getScrollPosition]);
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden bg-panel-right">
