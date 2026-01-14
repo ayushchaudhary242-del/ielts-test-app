@@ -7,6 +7,8 @@ interface WritingAnswerPanelProps {
   answers: WritingAnswers;
   onUpdateAnswer: (task: 1 | 2, value: string) => void;
   onSubmit?: () => void;
+  onScrollChange?: (key: string, position: number) => void;
+  getScrollPosition?: (key: string) => number;
 }
 
 export function WritingAnswerPanel({
@@ -14,29 +16,35 @@ export function WritingAnswerPanel({
   answers,
   onUpdateAnswer,
   onSubmit,
+  onScrollChange,
+  getScrollPosition,
 }: WritingAnswerPanelProps) {
   const currentAnswer = currentTask === 1 ? answers.task1 : answers.task2;
   const wordCount = currentAnswer.trim() ? currentAnswer.trim().split(/\s+/).length : 0;
   const targetWords = currentTask === 1 ? 150 : 250;
 
-  // Store scroll positions for each task's textarea
-  const scrollPositionsRef = useRef<Map<number, number>>(new Map());
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const isRestoringScroll = useRef(false);
+  const scrollKey = `writing-task-${currentTask}`;
 
   // Save scroll position when it changes
   const handleScroll = useCallback(() => {
-    if (textareaRef.current) {
-      scrollPositionsRef.current.set(currentTask, textareaRef.current.scrollTop);
+    if (textareaRef.current && !isRestoringScroll.current && onScrollChange) {
+      onScrollChange(scrollKey, textareaRef.current.scrollTop);
     }
-  }, [currentTask]);
+  }, [scrollKey, onScrollChange]);
 
   // Restore scroll position when task changes
   useEffect(() => {
-    if (textareaRef.current) {
-      const savedPosition = scrollPositionsRef.current.get(currentTask) || 0;
+    if (textareaRef.current && getScrollPosition) {
+      isRestoringScroll.current = true;
+      const savedPosition = getScrollPosition(scrollKey);
       textareaRef.current.scrollTop = savedPosition;
+      requestAnimationFrame(() => {
+        isRestoringScroll.current = false;
+      });
     }
-  }, [currentTask]);
+  }, [scrollKey, getScrollPosition]);
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden bg-panel-right">

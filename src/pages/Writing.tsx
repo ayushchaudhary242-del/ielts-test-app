@@ -8,11 +8,13 @@ import { CompactExamControls } from '@/components/exam/CompactExamControls';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { useScrollPersistence } from '@/hooks/useScrollPersistence';
 
 const WRITING_TIME = 60 * 60; // 60 minutes
 
 export default function Writing() {
   const { user } = useAuth();
+  const { saveScrollPosition, getScrollPosition } = useScrollPersistence();
 
   // Exam state
   const [examStarted, setExamStarted] = useState(false);
@@ -201,6 +203,9 @@ export default function Writing() {
               file={pdfFile}
               startPage={currentTaskConfig.pages[0]}
               endPage={currentTaskConfig.pages[1]}
+              scrollKey={`writing-pdf-task-${currentTask}`}
+              onScrollChange={saveScrollPosition}
+              getScrollPosition={getScrollPosition}
             />
           )}
         </div>
@@ -228,6 +233,8 @@ export default function Writing() {
             answers={answers}
             onUpdateAnswer={updateAnswer}
             onSubmit={handleSubmit}
+            onScrollChange={saveScrollPosition}
+            getScrollPosition={getScrollPosition}
           />
         </div>
       </div>

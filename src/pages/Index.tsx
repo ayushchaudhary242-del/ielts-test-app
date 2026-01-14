@@ -10,6 +10,7 @@ import { BookOpen, FileQuestion } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useScrollPersistence } from '@/hooks/useScrollPersistence';
 
 const INITIAL_TIME = 3600; // 60 minutes
 
@@ -19,6 +20,7 @@ const createInitialQuestions = (): QuestionState[] =>
 export default function Index() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { saveScrollPosition, getScrollPosition } = useScrollPersistence();
   
   // Exam state
   const [examStarted, setExamStarted] = useState(false);
@@ -267,6 +269,9 @@ export default function Index() {
               file={pdfFile}
               startPage={range.start}
               endPage={range.end}
+              scrollKey={`pdf-p${currentPassage}-${currentView}`}
+              onScrollChange={saveScrollPosition}
+              getScrollPosition={getScrollPosition}
             />
           )}
         </div>
@@ -297,6 +302,9 @@ export default function Index() {
             onToggleMark={toggleMark}
             onOpenNav={() => setShowNav(true)}
             onSubmit={handleSubmit}
+            scrollKey="reading-questions"
+            onScrollChange={saveScrollPosition}
+            getScrollPosition={getScrollPosition}
           />
         </div>
       </div>

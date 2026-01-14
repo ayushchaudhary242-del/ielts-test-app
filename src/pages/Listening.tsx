@@ -10,6 +10,7 @@ import { QuestionState, ListeningSection } from '@/types/exam';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useScrollPersistence } from '@/hooks/useScrollPersistence';
 
 const INITIAL_TIME = 1800; // 30 minutes for listening
 
@@ -19,6 +20,7 @@ const createInitialQuestions = (): QuestionState[] =>
 export default function Listening() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { saveScrollPosition, getScrollPosition } = useScrollPersistence();
   
   // Exam state
   const [examStarted, setExamStarted] = useState(false);
@@ -276,6 +278,9 @@ export default function Listening() {
               file={pdfFile}
               startPage={currentPageRange[0]}
               endPage={currentPageRange[1]}
+              scrollKey={`listening-pdf-s${currentSection}`}
+              onScrollChange={saveScrollPosition}
+              getScrollPosition={getScrollPosition}
             />
           )}
         </div>
@@ -306,6 +311,9 @@ export default function Listening() {
             onToggleMark={toggleMark}
             onOpenNav={() => setShowNav(true)}
             onSubmit={handleSubmit}
+            scrollKey="listening-questions"
+            onScrollChange={saveScrollPosition}
+            getScrollPosition={getScrollPosition}
           />
         </div>
       </div>
