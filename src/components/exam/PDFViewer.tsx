@@ -26,11 +26,19 @@ export function PDFViewer({
   const [numPages, setNumPages] = useState<number>(0);
   const [pdfUrl, setPdfUrl] = useState<string>('');
   const [containerWidth, setContainerWidth] = useState<number>(600);
+  const [pagesLoaded, setPagesLoaded] = useState<Set<number>>(new Set());
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const isRestoringScroll = useRef(false);
+  const hasRestoredScroll = useRef(false);
 
   // Create a key based on the page range to track scroll positions
   const rangeKey = scrollKey || `${startPage}-${endPage}`;
+
+  // Reset loaded pages and scroll restoration flag when range changes
+  useEffect(() => {
+    setPagesLoaded(new Set());
+    hasRestoredScroll.current = false;
+  }, [rangeKey]);
 
   // Save scroll position when it changes
   const handleScroll = useCallback(() => {
@@ -42,18 +50,34 @@ export function PDFViewer({
     }
   }, [rangeKey, onScrollChange]);
 
-  // Restore scroll position when page range changes
+  // Track when a page finishes rendering
+  const handlePageLoadSuccess = useCallback((pageNum: number) => {
+    setPagesLoaded(prev => new Set(prev).add(pageNum));
+  }, []);
+
+  // Restore scroll position after first page loads
   useEffect(() => {
-    if (scrollContainerRef.current && getScrollPosition) {
+    if (
+      scrollContainerRef.current && 
+      getScrollPosition && 
+      pagesLoaded.size > 0 && 
+      !hasRestoredScroll.current
+    ) {
+      hasRestoredScroll.current = true;
       isRestoringScroll.current = true;
       const savedPosition = getScrollPosition(rangeKey);
-      scrollContainerRef.current.scrollTop = savedPosition;
-      // Reset the flag after a short delay to allow the scroll to complete
-      requestAnimationFrame(() => {
-        isRestoringScroll.current = false;
-      });
+      
+      // Use setTimeout to ensure DOM has updated
+      setTimeout(() => {
+        if (scrollContainerRef.current) {
+          scrollContainerRef.current.scrollTop = savedPosition;
+        }
+        requestAnimationFrame(() => {
+          isRestoringScroll.current = false;
+        });
+      }, 50);
     }
-  }, [rangeKey, getScrollPosition]);
+  }, [pagesLoaded, rangeKey, getScrollPosition]);
 
   useEffect(() => {
     const url = URL.createObjectURL(file);
@@ -112,6 +136,7 @@ export function PDFViewer({
             <Page
               pageNumber={pageNum}
               width={Math.min(containerWidth, 800)}
+              onRenderSuccess={() => handlePageLoadSuccess(pageNum)}
               loading={
                 <div className="flex items-center justify-center py-10">
                   <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
